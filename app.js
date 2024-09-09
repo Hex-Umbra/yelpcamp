@@ -17,6 +17,7 @@ app.get("/", (req, res) => {
   res.render("home");
 });
 app.use(cors());
+app.use(express.urlencoded({extended: true}))
 app.use(campgroundsRouter)
 
 mongoose
