@@ -37,5 +37,31 @@ router.get("/campgrounds/:id", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+router.get("/campgrounds/:id/edit", async(req,res)=>{
+  try {
+    const campground = await campgroundModel.findById(req.params.id);
+    res.render("campgrounds/edit", { campground });
+  } catch (error) {
+    
+  }
+})
+router.put("/campgrounds/:id/", async(req,res)=>{
+  try {
+    const {id} = req.params;
+    const campground = await campgroundModel.findByIdAndUpdate(id,{...req.body.campground})
+    res.redirect(`/campgrounds/${campground._id}`)
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+})
+router.delete("/campgrounds/:id", async(req,res)=>{
+try {
+    const {id} = req.params;
+    const deletedCampground = await campgroundModel.findByIdAndDelete(id);
+    res.redirect("/campgrounds")
+} catch (error) {
+  res.status(500).json({ message: err.message });
+}  
+})
 
 module.exports = router;

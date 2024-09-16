@@ -1,8 +1,9 @@
 //
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors")
+const cors = require("cors");
 const path = require("path");
+const methodOverride = require("method-override");
 //
 const campgroundsRouter = require("./routes/campgoundRoutes");
 //
@@ -17,8 +18,9 @@ app.get("/", (req, res) => {
   res.render("home");
 });
 app.use(cors());
-app.use(express.urlencoded({extended: true}))
-app.use(campgroundsRouter)
+app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride("_method"));
+app.use(campgroundsRouter);
 
 mongoose
   .connect(MONGO_DB_LINK)
