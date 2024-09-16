@@ -13,19 +13,25 @@ router.get("/campgrounds", async (req, res) => {
 });
 router.get("/campgrounds/new", async (req, res) => {
   try {
-    res.render("campgrounds/new")
+    res.render("campgrounds/new");
   } catch (err) {
     console.log(err.message);
     res.status(500).json({ message: err.message });
   }
 });
-router.post("campgrounds", async(req,res)=>{
-  res.send(req.body)
-})
+router.post("/campgrounds", async (req, res) => {
+  try {
+    const newCampground = new campgroundModel(req.body.campground);
+    await newCampground.save();
+    res.redirect(`/campgrounds/${newCampground._id}`)
+  } catch (error) {
+    res.status(500).json({ message: err.message });
+  }
+});
 router.get("/campgrounds/:id", async (req, res) => {
   try {
     const campground = await campgroundModel.findById(req.params.id);
-    res.render("campgrounds/show",{ campground });
+    res.render("campgrounds/show", { campground });
   } catch (err) {
     console.log(err.message);
     res.status(500).json({ message: err.message });
