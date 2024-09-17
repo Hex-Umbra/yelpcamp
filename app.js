@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
 const methodOverride = require("method-override");
+const ejsMate = require("ejs-mate")
 //
 const campgroundsRouter = require("./routes/campgoundRoutes");
 //
@@ -11,6 +12,7 @@ const app = express();
 const MONGO_DB_LINK =
   "mongodb+srv://admin:adminroot@yelpcamp.sh3tw.mongodb.net/Yelpcamp";
 //
+app.engine("ejs", ejsMate)
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 //
