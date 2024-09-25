@@ -42,7 +42,7 @@ router.get("/campgrounds/:id/edit", async(req,res)=>{
     const campground = await campgroundModel.findById(req.params.id);
     res.render("campgrounds/edit", { campground });
   } catch (error) {
-    
+    res.status(500).json({ message: err.message });
   }
 })
 router.put("/campgrounds/:id/", async(req,res)=>{
