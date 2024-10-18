@@ -3,8 +3,8 @@ const campgroundModel = require("../models/campgroundModel.js");
 const catchAsync = require("../Utils/catchAsync");
 const ExpressError = require("../Utils/ExpressError.js");
 const router = express.Router();
-const {campgroundSchema} = require("../Utils/joiSchemas.js")
-
+const { campgroundSchema } = require("../Utils/joiSchemas.js");
+const reviewModel = require("../models/reviewModel.js");
 
 //Function to check if the information sent by the server is valid and can be saved in the db.
 const validateCampground = (req, res, next) => {
@@ -12,7 +12,7 @@ const validateCampground = (req, res, next) => {
   if (error) {
     const msg = error.details.map((el) => el.message).join(",");
     throw new ExpressError(msg, 400);
-  }else(next)
+  } else next;
 };
 
 router.get(
@@ -36,7 +36,7 @@ router.post(
 );
 router.get(
   "/campgrounds/:id/edit",
-  catchAsync(async (req, res,next) => {
+  catchAsync(async (req, res, next) => {
     const campground = await campgroundModel.findById(req.params.id);
     res.render("campgrounds/edit", { campground });
     res.status(500).json({ message: err.message });
@@ -45,7 +45,7 @@ router.get(
 router.put(
   "/campgrounds/:id",
   validateCampground,
-  catchAsync(async (req, res,next) => {
+  catchAsync(async (req, res, next) => {
     const { id } = req.params;
     const campground = await campgroundModel.findByIdAndUpdate(id, {
       ...req.body.campground,
@@ -56,7 +56,7 @@ router.put(
 );
 router.get(
   "/campgrounds/:id",
-  catchAsync(async (req, res,next) => {
+  catchAsync(async (req, res, next) => {
     const campground = await campgroundModel.findById(req.params.id);
     res.render("campgrounds/show", { campground });
     console.log(err.message);
@@ -72,6 +72,19 @@ router.delete("/campgrounds/:id", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+//Adding Review route as a subdocument of campground
+router.post(
+  "/campgrounds/:id/reviews",
+  catchAsync(async (req, res) => {
+    const campground = await campgroundModel.findById(req.params.id);
+    const review = new reviewModel(req.body.review);
+    campground.reviews.push(review);  //Adding review to the campground
+    await review.save();  //save the review
+    await campground.save();   //save the campground
+    res.redirect(`/campgrounds/${campground._id}`)
+  })
+);
 
 //Middlewares if an error occurs
 //If page doesn't exist
