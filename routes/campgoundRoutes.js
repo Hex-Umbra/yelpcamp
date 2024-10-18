@@ -76,21 +76,35 @@ router.delete("/campgrounds/:id", async (req, res) => {
     const deletedCampground = await campgroundModel.findByIdAndDelete(id);
     res.redirect("/campgrounds");
   } catch (error) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: error.message });
   }
 });
 
-//Adding Review route as a subdocument of campground
+// Post route to create a new review and associate it with a campground.
 router.post(
   "/campgrounds/:id/reviews",
   validateReview,
   catchAsync(async (req, res) => {
     const campground = await campgroundModel.findById(req.params.id);
     const review = new reviewModel(req.body.review);
-    campground.reviews.push(review);  //Adding review to the campground
-    await review.save();  //save the review
-    await campground.save();   //save the campground
+    campground.reviews.push(review); //Adding review to the campground
+    await review.save(); //save the review
+    await campground.save(); //save the campground
     res.redirect(`/campgrounds/${campground._id}`);
+  })
+);
+//Delete route to delete a specific review
+router.delete(
+  "/campgrounds/:id/reviews/:reviewId",
+  catchAsync(async (req, res) => {
+    //We need to remove the reference of the review in the campground
+    const { id, reviewId } = req.params;
+    await campgroundModel.findByIdAndUpdate(id, {
+      $pull: { reviews: reviewId },
+    }); //Using a mongoose operator "$pull" to remove the review from the campground in the reviews array by matching it with the reviewId
+    //And then remove the review itself
+    await reviewModel.findByIdAndDelete(reviewId);
+    res.redirect(`/campgrounds/${id}`);
   })
 );
 
