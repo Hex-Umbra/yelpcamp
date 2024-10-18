@@ -3,7 +3,7 @@ const campgroundModel = require("../models/campgroundModel.js");
 const catchAsync = require("../Utils/catchAsync");
 const ExpressError = require("../Utils/ExpressError.js");
 const router = express.Router();
-const { campgroundSchema } = require("../Utils/joiSchemas.js");
+const { campgroundSchema , reviewSchema} = require("../Utils/joiSchemas.js");
 const reviewModel = require("../models/reviewModel.js");
 
 //Function to check if the information sent by the server is valid and can be saved in the db.
@@ -14,6 +14,13 @@ const validateCampground = (req, res, next) => {
     throw new ExpressError(msg, 400);
   } else next;
 };
+const validateReview = (req,res,next)=>{
+  const {error} = reviewSchema.validate(req.body)
+  if (error) {
+    const msg = error.details.map((el) => el.message).join(",");
+    throw new ExpressError(msg, 400);
+  } else next;
+}
 
 router.get(
   "/campgrounds",
@@ -57,10 +64,8 @@ router.put(
 router.get(
   "/campgrounds/:id",
   catchAsync(async (req, res, next) => {
-    const campground = await campgroundModel.findById(req.params.id);
+    const campground = await campgroundModel.findById(req.params.id).populate("reviews");    
     res.render("campgrounds/show", { campground });
-    console.log(err.message);
-    res.status(500).json({ message: err.message });
   })
 );
 router.delete("/campgrounds/:id", async (req, res) => {
@@ -76,6 +81,7 @@ router.delete("/campgrounds/:id", async (req, res) => {
 //Adding Review route as a subdocument of campground
 router.post(
   "/campgrounds/:id/reviews",
+  validateReview,
   catchAsync(async (req, res) => {
     const campground = await campgroundModel.findById(req.params.id);
     const review = new reviewModel(req.body.review);
