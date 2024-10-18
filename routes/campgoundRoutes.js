@@ -3,7 +3,17 @@ const campgroundModel = require("../models/campgroundModel.js");
 const catchAsync = require("../Utils/catchAsync");
 const ExpressError = require("../Utils/ExpressError.js");
 const router = express.Router();
-const Joi = require("joi");
+const {campgroundSchema} = require("../Utils/joiSchemas.js")
+
+
+//Function to check if the information sent by the server is valid and can be saved in the db.
+const validateCampground = (req, res, next) => {
+  const { error } = campgroundSchema.validate(req.body);
+  if (error) {
+    const msg = error.details.map((el) => el.message).join(",");
+    throw new ExpressError(msg, 400);
+  }else(next)
+};
 
 router.get(
   "/campgrounds",
@@ -17,39 +27,16 @@ router.get("/campgrounds/new", async (req, res) => {
 });
 router.post(
   "/campgrounds",
+  validateCampground,
   catchAsync(async (req, res, next) => {
-    // if (!req.body.campground) throw new ExpressError("Invalid Data", 400);
-    const campgroundSchema = Joi.object({
-      campground: Joi.object({
-        title: Joi.string().required(),
-        price: Joi.number().required().min(0),
-        location: Joi.string().required(),
-        image: Joi.string().required(),
-        description: Joi.string().required(),
-      }).required(),
-    });
-    const { error } = campgroundSchema.validate(req.body);
-    if (error) {
-      const msg = error.details.map((el) => el.message).join(",");
-      throw new ExpressError(msg, 400);
-    }
     const newCampground = new campgroundModel(req.body.campground);
     await newCampground.save();
     res.redirect(`/campgrounds/${newCampground._id}`);
   })
 );
 router.get(
-  "/campgrounds/:id",
-  catchAsync(async (req, res) => {
-    const campground = await campgroundModel.findById(req.params.id);
-    res.render("campgrounds/show", { campground });
-    console.log(err.message);
-    res.status(500).json({ message: err.message });
-  })
-);
-router.get(
   "/campgrounds/:id/edit",
-  catchAsync(async (req, res) => {
+  catchAsync(async (req, res,next) => {
     const campground = await campgroundModel.findById(req.params.id);
     res.render("campgrounds/edit", { campground });
     res.status(500).json({ message: err.message });
@@ -57,12 +44,22 @@ router.get(
 );
 router.put(
   "/campgrounds/:id",
-  catchAsync(async (req, res) => {
+  validateCampground,
+  catchAsync(async (req, res,next) => {
     const { id } = req.params;
     const campground = await campgroundModel.findByIdAndUpdate(id, {
       ...req.body.campground,
     });
     res.redirect(`/campgrounds/${campground._id}`);
+    res.status(500).json({ message: err.message });
+  })
+);
+router.get(
+  "/campgrounds/:id",
+  catchAsync(async (req, res,next) => {
+    const campground = await campgroundModel.findById(req.params.id);
+    res.render("campgrounds/show", { campground });
+    console.log(err.message);
     res.status(500).json({ message: err.message });
   })
 );
@@ -76,10 +73,12 @@ router.delete("/campgrounds/:id", async (req, res) => {
   }
 });
 
-//
+//Middlewares if an error occurs
+//If page doesn't exist
 router.all("*", (req, res, next) => {
   next(new ExpressError("Page Not Found", 404));
 });
+//If an error occurs at any point in our application
 router.use((err, req, res, next) => {
   const { status = 500 } = err;
   if (!err.message) err.message = "Oh no, Something Went Wrong";
