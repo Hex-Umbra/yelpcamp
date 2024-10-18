@@ -3,7 +3,7 @@ const campgroundModel = require("../models/campgroundModel.js");
 const catchAsync = require("../Utils/catchAsync");
 const ExpressError = require("../Utils/ExpressError.js");
 const router = express.Router();
-const { campgroundSchema , reviewSchema} = require("../Utils/joiSchemas.js");
+const { campgroundSchema, reviewSchema } = require("../Utils/joiSchemas.js");
 const reviewModel = require("../models/reviewModel.js");
 
 //Function to check if the information sent by the server is valid and can be saved in the db.
@@ -12,15 +12,15 @@ const validateCampground = (req, res, next) => {
   if (error) {
     const msg = error.details.map((el) => el.message).join(",");
     throw new ExpressError(msg, 400);
-  } else next;
+  } else next();
 };
-const validateReview = (req,res,next)=>{
-  const {error} = reviewSchema.validate(req.body)
+const validateReview = (req, res, next) => {
+  const { error } = reviewSchema.validate(req.body);
   if (error) {
     const msg = error.details.map((el) => el.message).join(",");
     throw new ExpressError(msg, 400);
-  } else next;
-}
+  } else next();
+};
 
 router.get(
   "/campgrounds",
@@ -64,7 +64,9 @@ router.put(
 router.get(
   "/campgrounds/:id",
   catchAsync(async (req, res, next) => {
-    const campground = await campgroundModel.findById(req.params.id).populate("reviews");    
+    const campground = await campgroundModel
+      .findById(req.params.id)
+      .populate("reviews");
     res.render("campgrounds/show", { campground });
   })
 );
@@ -88,7 +90,7 @@ router.post(
     campground.reviews.push(review);  //Adding review to the campground
     await review.save();  //save the review
     await campground.save();   //save the campground
-    res.redirect(`/campgrounds/${campground._id}`)
+    res.redirect(`/campgrounds/${campground._id}`);
   })
 );
 
