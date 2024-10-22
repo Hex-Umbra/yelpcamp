@@ -26,6 +26,6 @@ CampgroundSchema.post("findOneAndDelete", async function (campground) {
     });
     //Removing all reviews associated with the campground by looking at the campground's reviews array with the mongoose "$in" operator to remove them from the Review Collection now that their campground has been deleted.
   }
-}); // this is a middleware function that runs whenever a Campground is deleted
+}); 
 
 module.exports = mongoose.model("Campground", CampgroundSchema);
