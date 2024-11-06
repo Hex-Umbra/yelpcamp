@@ -7,10 +7,18 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const session = require("express-session");
 const flash = require("connect-flash");
+const ExpressError = require("./Utils/ExpressError");
+//Passport Requires
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const userModel = require("./models/userModel");
+
 require("dotenv").config();
+
 //Importing routes
 const campgroundsRouter = require("./routes/campgoundRoutes");
 const reviewRouter = require("./routes/reviewRoutes");
+const userRouter = require("./routes/userRoutes");
 //
 const app = express();
 const MONGO_DB_LINK = process.env.MONGO_DB_LINK;
@@ -44,13 +52,24 @@ const sessionConfigs = {
 app.use(session(sessionConfigs));
 app.use(flash());
 
+//Passport Middleware for Authentication
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(userModel.authenticate()));
+
+passport.serializeUser(userModel.serializeUser());
+passport.deserializeUser(userModel.deserializeUser());
+
+//Global middleware, used to access some variables from everywhere in my app
 app.use((req, res, next) => {
+  res.locals.currentUser = req.user;
   res.locals.success = req.flash("success");
   res.locals.error = req.flash("error");
   next();
 });
 
 //Routers
+app.use("/", userRouter);
 app.use("/campgrounds", campgroundsRouter);
 app.use("/campgrounds/:id/reviews", reviewRouter);
 
